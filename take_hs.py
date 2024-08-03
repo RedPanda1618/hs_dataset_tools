@@ -10,6 +10,7 @@ if __name__ == "__main__":
     capture_num = int(input("Enter capture number: "))
 
     while True:
+        print("s: scan, p: preview, d: dark, q: quit")
         key = input("Enter key: ")
         if key == "s":
             select_window(capture_num)
