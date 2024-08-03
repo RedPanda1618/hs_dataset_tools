@@ -6,6 +6,9 @@ def scan_hs(scan_rate):
     set_scan_rate(scan_rate)
     pag.press("s")
 
+def select_window(window_num):
+    pag.hotkey("win", str(window_num))
+    sleep(0.5)
 
 def preview_hs():
     pag.press("p")
