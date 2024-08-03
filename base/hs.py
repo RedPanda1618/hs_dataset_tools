@@ -3,6 +3,7 @@ from time import sleep
 
 
 def scan_hs(scan_rate):
+    set_scan_rate(scan_rate)
     pag.press("s")
 
 
@@ -22,3 +23,7 @@ def set_scan_rate(scan_rate):
 
 def save_hs():
     pass
+
+
+def black_hs():
+    pag.hotkey("ctrl", "d")
