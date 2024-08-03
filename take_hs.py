@@ -15,12 +15,10 @@ if __name__ == "__main__":
         if key == "s":
             select_window(capture_num)
             print("Start scanning")
-            set_scan_rate(high_scan_rate)
             scan_hs(high_scan_rate)
             sleep(high_scan_second)
             sleep(save_time)
 
-            set_scan_rate(low_scan_rate)
             scan_hs(low_scan_rate)
             sleep(low_scan_second)
             sleep(save_time)
