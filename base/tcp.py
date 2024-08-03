@@ -19,7 +19,7 @@ class TCPboth:
 
     def _server_th(self):
         if self.conn is None:
-            self.server = create_server(self.SrcAddr)
+            self.server = self.create_connection(self.SrcAddr[0], self.SrcAddr[1])
             self.server.listen()
             # 接続を待機
             self.conn, self.addr = self.server.accept()
