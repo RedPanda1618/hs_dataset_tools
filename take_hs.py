@@ -10,11 +10,18 @@ if __name__ == "__main__":
     while True:
         key = input("Enter key: ")
         if key == "s":
+            print("Start scanning")
+            set_scan_rate(high_scan_rate)
             scan_hs(high_scan_rate)
             sleep(high_scan_second)
+            sleep(save_time)
 
+            set_scan_rate(low_scan_rate)
             scan_hs(low_scan_rate)
             sleep(low_scan_second)
+            sleep(save_time)
+            print("End scanning")
+
         elif key == "p":
             preview_hs()
         elif key == "d":
