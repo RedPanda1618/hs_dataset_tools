@@ -33,3 +33,7 @@ def save_hs():
 def black_hs(scan_rate):
     set_scan_rate(scan_rate)
     pag.hotkey("ctrl", "d")
+
+
+def delete_black_hs():
+    pag.hotkey("ctrl", "r")

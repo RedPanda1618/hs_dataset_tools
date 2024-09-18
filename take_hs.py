@@ -42,10 +42,13 @@ if __name__ == "__main__":
             sleep(high_scan_rate / 1080 * 100)
             sleep(10)
             sleep(save_time)
+            delete_black_hs()
+
             black_hs(low_scan_rate)
             sleep(low_scan_rate / 1080 * 100)
             sleep(10)
             sleep(save_time)
+            delete_black_hs()
             select_window(cmd_num)
             playsound("voice_data/done_dark.mp3")
         elif key == "q":
