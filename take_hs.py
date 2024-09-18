@@ -26,10 +26,10 @@ if __name__ == "__main__":
             set_scan_rate(low_scan_rate)
             scan_hs(low_scan_rate)
             sleep(low_scan_second)
+            playsound("voice_data/done_scan.mp3")
             sleep(save_time)
             select_window(cmd_num)
             print("Done.")
-            playsound("voice_data/done_scan.mp3")
 
         elif key == "p":
             select_window(capture_num)
@@ -40,18 +40,18 @@ if __name__ == "__main__":
             print("Start dark scan with high scan rate")
             select_window(capture_num)
             black_hs(high_scan_rate)
-            sleep(high_scan_second / 1080 * 100)
-            sleep(16)
+            sleep(high_scan_second / 1080 * 105)
+            sleep(15)
             sleep(save_time)
             delete_black_hs()
 
             print("Start dark scan with low scan rate")
             black_hs(low_scan_rate)
-            sleep(low_scan_second / 1080 * 100)
-            sleep(16)
+            sleep(low_scan_second / 1080 * 105)
+            playsound("voice_data/done_dark.mp3")
+            sleep(15)
             sleep(save_time)
             delete_black_hs()
             select_window(cmd_num)
-            playsound("voice_data/done_dark.mp3")
         elif key == "q":
             break
