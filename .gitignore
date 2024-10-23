@@ -162,4 +162,4 @@ cython_debug/
 #.idea/
 
 .history
-
+voice_data/*
