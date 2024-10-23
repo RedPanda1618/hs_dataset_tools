@@ -33,7 +33,7 @@ def guide_hand_position(position, voice):
     playsound(voice)
 
     # RGBカメラで確認する処理を想定 (ここでは擬似的に)
-    print(f"RGBカメラで{position}の確認完了。")
+    print(f"手の位置を確認してください: {position}")
 
 
 def wait_for_enter():
@@ -75,10 +75,10 @@ def capture_loop(conf):
         "位置をそのままに，掌を上にしてください",
         "掌を下にしてください．４番のテープに中指を置いて，指を内側に向けてください",
         "５番のテープに中指を置いて，指を外側に向けてください",
-        "左にある黒い台を６番のテープに合わせて設置し，エーの面に手を置いてください．指は正面に向けてください",
-        "ビーの面に手を置いてください",
-        "シーの面に手を置いてください",
-        "ディーの面に手を置いてください",
+        "左にある黒い台を６番のテープに合わせて設置し，手前の面に手を置いてください．指は正面に向けてください",
+        "奥の面に手を置いてください",
+        "外側の面に手を置いてください",
+        "内側の面に手を置いてください",
         "台の先端に手を置いて，水平にしてください．指は正面に向けてください．",
     ]
     hand_positions = list(range(len(hand_positions_text)))
@@ -89,6 +89,7 @@ def capture_loop(conf):
     done_voice = init_voice(["done"], [done_text])[0]
     select_window(conf["capture_num"])
     set_scan_rate(conf["scan_rate"])
+    save_csv("user_name", "position", "datetime")
     while True:
         username = get_username()
         for i, position in enumerate(hand_positions):
@@ -96,10 +97,12 @@ def capture_loop(conf):
             wait_for_enter()
             save_csv(username, position, datetime.datetime.now())
             select_window(conf["capture_num"])
-            start_hs_capture(conf["scan_second"], next_voice),
+            if i == len(hand_positions) - 1:
+                start_hs_capture(conf["scan_second"], done_voice)
+            else:
+                start_hs_capture(conf["scan_second"], next_voice)
             save_data(conf["save_time"])
-            select_window(conf["cmd_num"]),
-        playsound(done_voice)
+            select_window(conf["cmd_num"])
 
 
 def main():
