@@ -2,6 +2,7 @@ import glob
 import cv2
 import numpy as np
 import os
+import zipfile
 
 
 def check_dataset(rgb_files, nir_files):
@@ -42,13 +43,29 @@ def check_dataset(rgb_files, nir_files):
     return True
 
 
+def search_from_zip(zip_file_path):
+    zip_file_path = zip_file_path.replace("file://", "")
+    search_files = [".jpg", ".jpeg", ".png"]
+    with zipfile.ZipFile(zip_file_path, "r") as z:
+        file_list = z.namelist()
+        files = [f for f in file_list if any([s in f for s in search_files])]
+    return files
+
+
 def main():
     rgb_dir = input("Enter the path to the RGB images: ")
     nir_dir = input("Enter the path to the NIR images: ")
     # rgb_dir = "/home/shumpei/ダウンロード/rgb_20240909/"
     # nir_dir = "/home/shumpei/ダウンロード/nir_20240909/"
-    rgb_files = glob.glob(os.path.join(rgb_dir, "*.jpg"))
-    nir_files = glob.glob(os.path.join(nir_dir, "*.jpg"))
+    if rgb_dir.endswith(".zip"):
+        rgb_files = search_from_zip(rgb_dir)
+    else:
+        rgb_files = glob.glob(os.path.join(rgb_dir, "*.jpg"))
+
+    if nir_dir.endswith(".zip"):
+        nir_files = search_from_zip(nir_dir)
+    else:
+        nir_files = glob.glob(os.path.join(nir_dir, "*.jpg"))
 
     check_dataset(rgb_files, nir_files)
 
