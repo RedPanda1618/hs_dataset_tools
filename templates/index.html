@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>撮影フロー作成・実行</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script>
+        let flow = []
+        function addStep(action) {
+            let params = {}
+            if (action === 'scan' || action === 'dark') {
+                params['scan_rate'] = parseInt(prompt('スキャンレート\n(デフォルト値を使用する場合は空白のままにしてください):'))
+                if (isNaN(params['scan_rate'])) {
+                    params['scan_rate'] = null;
+                }
+            } else if (action === 'sleep') {
+                params['duration'] = parseFloat(prompt('待機時間 (秒):'))
+                if (isNaN(params['duration'])) {
+                    alert('無効な待機時間です。');
+                    return;
+                }
+            } else if (action === 'set_scan_rate') {
+                params['scan_rate'] = parseFloat(prompt('スキャンレート:'))
+                if (isNaN(params['scan_rate'])) {
+                    alert('無効なスキャンレートです。');
+                    return;
+                }
+            } else if (action === 'select_window') {
+                params['window_num'] = parseInt(prompt('ウィンドウ番号\n(タスクバーの左から数えて何番目のウィンドウか):'))
+                if (isNaN(params['window_num'])) {
+                    alert('無効なウィンドウ番号です。');
+                    return;
+                }
+            } else if (action === 'set_gain') {
+                params['gain'] = parseInt(prompt('ゲイン:'))
+                if (params['gain'] === '' || params['gain'] === null) {
+                    alert('無効なゲインです。');
+                    return;
+                }
+            }
+            flow.push({ action, params })
+            updateFlowDisplay()
+        }
+        function updateFlowDisplay() {
+            document.getElementById('flowDisplay').innerText = '';
+            let flowDisplay = '';
+            flow.forEach((step, index) => {
+                flowDisplay += '<div class="border p-3 mb-3 flowElement rounded">';
+                flowDisplay += '<h5>Step ' + (index + 1) + ': ' + step.action + '</h5>';
+                flowDisplay += '<div>';
+                for (const key in step.params) {
+                    if (step.params[key] === null) continue;
+                    flowDisplay += '<p>' + key + ': ' + step.params[key] + '</p>';
+                }
+                flowDisplay += '</div>';
+                flowDisplay += '<button class="btn btn-danger" onclick="flow.splice(' + index + ', 1); updateFlowDisplay()">削除</button>';
+                flowDisplay += '</div>';
+            })
+            document.getElementById('flowDisplay').innerHTML = flowDisplay;
+        }
+
+        function saveFlow() {
+            fetch('/save_flow', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ flow })
+            })
+                .then(response => response.blob())
+                .then(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    const datetime_str = new Date().toISOString().replace(/:/g, '-').split('.')[0];
+                    a.href = url;
+                    a.download = 'flow_' + datetime_str + '.json';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                })
+                .catch(err => console.error(err));
+        }
+
+        function runFlow() {
+            fetch('/run_flow', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ flow })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                });
+        }
+
+        function stop() {
+            fetch('/stop_flow', { method: 'GET' })
+        }
+    </script>
+    <style>
+        .row-eq-height {
+            display: flex;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+
+<body onload="pollStatus()">
+    <div class="container mt-3">
+        <h1 class="mb-3">HS用 撮影フロー作成・実行自動化ツール</h1>
+        <h2>フロー作成</h2>
+        <div class="container text-center">
+            <div class="row row-cols-5 row-eq-height row-gap-1">
+                <div class="col">
+                    <button class="btn btn-primary mb-2 w-100 h-100" onclick="addStep('scan')">Scan追加</button>
+                </div>
+                <div class="col">
+                    <button class="btn btn-primary mb-2 w-100 h-100" onclick="addStep('preview')">Preview追加</button>
+                </div>
+                <div class="col">
+                    <button class="btn btn-primary mb-2 w-100 h-100" onclick="addStep('dark')">Dark追加</button>
+                </div>
+                <div class="col">
+                    <button class="btn btn-primary mb-2 w-100 h-100" onclick="addStep('select_window')">Select
+                        Window追加</button>
+                </div>
+                <div class="col">
+                    <button class="btn btn-primary mb-2 w-100 h-100" onclick="addStep('set_scan_rate')">Set Scan
+                        Rate追加</button>
+                </div>
+                <div class="col">
+                    <button class="btn btn-primary mb-2 w-100 h-100" onclick="addStep('set_gain')">Set Gain追加</button>
+                </div>
+                <div class="col">
+                    <button class="btn btn-primary mb-2 w-100 h-100" onclick="addStep('sleep')">Sleep追加</button>
+                </div>
+                <div class="col">
+                    <button class="btn btn-primary mb-2 w-100 h-100" onclick="addStep('wait')">チェック待ち</button>
+                </div>
+                <div class="col">
+                    <button class="btn btn-primary mb-2 w-100 h-100" onclick="addStep('delete_dark')">Delete
+                        Dark追加</button>
+                </div>
+                <div class="col">
+                    <button class="btn btn-info mb-2 w-100 h-100" onclick="saveFlow()">フロー保存</button>
+                </div>
+                <div class="col">
+                    <!-- <button class="btn btn-info mb-2 w-100 h-100" onclick="importFlow()">フロー読込み</button> -->
+                    <input type="file" id="importFile" name="file" accept=".json" style="display:none">
+                    <button class="btn btn-info mb-2 w-100 h-100"
+                        onclick="document.getElementById('importFile').click()">フロー読込み</button>
+                </div>
+                <div class="col">
+                    <button class="btn btn-success mb-2 w-100 h-100" onclick="runFlow()">フロー実行</button>
+                </div>
+                <div class="col">
+                    <button class="btn btn-secondary mb-2 w-100 h-100"
+                        onclick="flow = []; updateFlowDisplay()">リセット</button>
+                </div>
+                <div class="col">
+                    <button class="btn btn-danger mb-2 w-100 h-100" onclick="stop()">終了</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container mt-3">
+        <div class="d-flex align-items-center">
+            <h2 class="mb-0 me-3">ステータス: <span id="flowStatus" class="text-info">完了</span></h2>
+            <button class="btn btn-warning mb-0" onclick="resumeFlow()" id="restartBtn" style="display:none;">
+                再開
+            </button>
+        </div>
+    </div>
+    <div class="container mt-3">
+        <h2>あなたのフロー</h2>
+        <div class="border p-3 rounded" id="flowDisplay"></div>
+    </div>
+
+    <footer class="bd-highlighttext-center small text-muted mt-3">
+        <div class="container bg-light p-3 rounded">
+            <h2>使い方</h2>
+            <p class="mt-0">このツールは、HS用撮影フロー作成・実行自動化ツールです。</p>
+            <p class="mt-0">フローを作成し、実行することで、撮影作業を自動化することができます。</p>
+            <p class="mt-0">フローの作成方法は、上部のボタンをクリックしてステップを追加していくだけです。</p>
+            <p class="mt-0">フローの保存は、フロー保存ボタンをクリックすることで、フローをJSON形式で保存することができます。</p>
+            <p class="mt-0">フローの読込みは、フロー読込みボタンをクリックすることで、保存したフローを読み込むことができます。</p>
+            <p class="mt-0">フローの実行は、フロー実行ボタンをクリックすることで、作成したフローを実行することができます。</p>
+            <p class="mt-0">フローの終了は、終了ボタンをクリックすることで、実行中のフローを終了することができます。</p>
+        </div>
+        <p class="fixed-bottom">Copyright © 2025 S.Chochi</p>
+    </footer>
+
+    <script>
+        function enableDragAndDrop() {
+            const flowDisplay = document.getElementById('flowDisplay');
+            new Sortable(flowDisplay, {
+                animation: 150,
+                onEnd: function (evt) {
+                    const itemEl = evt.item;
+                    const oldIndex = evt.oldIndex;
+                    const newIndex = evt.newIndex;
+                    const movedItem = flow.splice(oldIndex, 1)[0];
+                    flow.splice(newIndex, 0, movedItem);
+                    updateFlowDisplay();
+                }
+            });
+        }
+        document.addEventListener('DOMContentLoaded', enableDragAndDrop);
+
+
+        const importFile = document.getElementById('importFile');
+        importFile.onchange = () => {
+            if (importFile.files.length !== 1) return;
+            const file = importFile.files[0];
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const fileContent = event.target.result;
+                fetch('/import_flow', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ file_content: fileContent })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        flow = data.flow;
+                        updateFlowDisplay();
+                    });
+            };
+            reader.readAsText(file);
+        };
+
+        function pollStatus() {
+            setInterval(() => {
+                fetch('/check_status')
+                    .then(res => res.json())
+                    .then(data => {
+                        const restartBtn = document.getElementById('restartBtn');
+                        const flowStatus = document.getElementById('flowStatus');
+                        flowStatus.textContent = data.status;
+
+                        if (data.status === '完了') {
+                            restartBtn.style.display = 'none';
+                            flowStatus.classList.remove('text-danger');
+                            flowStatus.classList.remove('text-success');
+                            flowStatus.classList.add('text-info');
+                            document.querySelectorAll('.flowElement').forEach(element => {
+                                element.classList.remove('bg-info');
+                            });
+                        }
+                        else if (data.status === '実行中') {
+                            restartBtn.style.display = 'none';
+                            flowStatus.classList.remove('text-info');
+                            flowStatus.classList.remove('text-danger');
+                            flowStatus.classList.add('text-success');
+                            document.querySelectorAll('.flowElement').forEach((element, index) => {
+                                if (index === data.status_index) {
+                                    element.classList.add('bg-info');
+                                } else {
+                                    element.classList.remove('bg-info');
+                                }
+                            });
+                        }
+                        else if (data.status === 'チェック待ち') {
+                            restartBtn.style.display = 'block';
+                            flowStatus.classList.remove('text-success');
+                            flowStatus.classList.remove('text-info');
+                            flowStatus.classList.add('text-danger');
+                            document.querySelectorAll('.flowElement').forEach((element, index) => {
+                                if (index === data.status_index) {
+                                    element.classList.add('bg-info');
+                                } else {
+                                    element.classList.remove('bg-info');
+                                }
+                            });
+                        }
+
+                    });
+            }, 1000);
+        }
+        function resumeFlow() {
+            fetch('/resume_flow', { method: 'GET' });
+        }
+    </script>
+</body>
+
+</html>
